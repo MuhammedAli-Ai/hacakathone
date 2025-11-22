@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - MyApp</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Lato font from Google Fonts (soft and highly readable) -->
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        /* Custom styles to ensure the container uses the full viewport height and centers content */
+        body {
+            /* Using Lato for the soft look you requested */
+            font-family: 'Lato', sans-serif; 
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background-color: #f4f7f6;
+        }
+        /* Style for the custom modal message box */
+        .modal-overlay {
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Main Content: Centered Sign Up Form -->
+    <main class="flex-grow flex items-center justify-center p-4">
+        <div class="w-full max-w-md bg-white p-8 md:p-10 rounded-xl shadow-2xl border border-gray-100">
+            
+            <!-- Site Title/Logo (Moved inside the card for context) -->
+            <h1 class="text-3xl font-extrabold text-blue-600 text-center mb-4">
+                MyApp
+            </h1>
+            <h2 class="text-2xl font-bold text-gray-900 text-center mb-8">
+                Create Your Account
+            </h2>
+            
+            <!-- Added onsubmit to trigger the JavaScript handler -->
+            <form id="signup-form" onsubmit="handleSignup(event)" class="space-y-6">
+                <!-- Name Input Field -->
+                <div>
+                    <label for="name" class="block text-sm font-medium text-gray-700 mb-1">
+                        Full Name
+                    </label>
+                    <div class="mt-1">
+                        <input id="name" name="name" type="text" autocomplete="name" required 
+                               class="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm 
+                               placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-base">
+                    </div>
+                </div>
+
+                <!-- Email Input Field -->
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700 mb-1">
+                        Email Address
+                    </label>
+                    <div class="mt-1">
+                        <input id="email" name="email" type="email" autocomplete="email" required 
+                               class="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm 
+                               placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-base">
+                    </div>
+                </div>
+
+                <!-- Password Input Field -->
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700 mb-1">
+                        Password
+                    </label>
+                    <div class="mt-1">
+                        <input id="password" name="password" type="password" autocomplete="new-password" required 
+                               class="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm 
+                               placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-base">
+                    </div>
+                </div>
+
+                <!-- Confirm Password Input Field -->
+                <div>
+                    <label for="confirm-password" class="block text-sm font-medium text-gray-700 mb-1">
+                        Confirm Password
+                    </label>
+                    <div class="mt-1">
+                        <input id="confirm-password" name="confirm-password" type="password" autocomplete="new-password" required 
+                               class="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm 
+                               placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-base">
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div>
+                    <button id="signup-button" type="submit" 
+                            class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg 
+                                   shadow-md text-base font-medium text-white bg-blue-600 
+                                   hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 
+                                   transition duration-150 ease-in-out transform hover:scale-[1.01]">
+                        Create Account
+                    </button>
+                </div>
+            </form>
+
+            <!-- Login Prompt -->
+            <div class="mt-6 text-center">
+                <p class="text-sm text-gray-600">
+                    Already have an account?
+                    <a href="/login/index.html" class="font-medium text-blue-600 hover:text-blue-500">
+                        Log in
+                    </a>
+                </p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Custom Modal for Messages (replaces alert()) -->
+    <div id="message-modal" class="modal-overlay hidden fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg p-6 shadow-2xl max-w-sm w-full">
+            <h3 id="modal-title" class="text-xl font-bold mb-3 text-gray-800"></h3>
+            <p id="modal-message" class="text-gray-600 mb-5"></p>
+            <button id="modal-ok-button"
+                    class="w-full py-2 px-4 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 transition">
+                OK
+            </button>
+        </div>
+    </div>
+
+    <!-- JavaScript for Local Storage and Form Handling -->
+    <script>
+        /**
+         * Function to display the custom modal with an optional redirect upon pressing OK.
+         * @param {string} title - The title of the modal.
+         * @param {string} message - The message content.
+         * @param {string | null} redirectUrl - URL to redirect to after closing the modal.
+         */
+        function showMessage(title, message, redirectUrl = null) {
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-message').innerText = message;
+            document.getElementById('message-modal').classList.remove('hidden');
+
+            const okButton = document.getElementById('modal-ok-button');
+            // Clear any previous listener
+            okButton.onclick = null; 
+
+            if (redirectUrl) {
+                // Set click handler to close modal AND redirect
+                okButton.onclick = () => {
+                    document.getElementById('message-modal').classList.add('hidden');
+                    // Redirect to the specified URL (e.g., /create/index.html)
+                    window.location.href = redirectUrl; 
+                };
+            } else {
+                // Set click handler to just close the modal
+                okButton.onclick = () => {
+                    document.getElementById('message-modal').classList.add('hidden');
+                };
+            }
+        }
+
+        // Form Submission Handler using LocalStorage
+        window.handleSignup = async (event) => {
+            event.preventDefault();
+            
+            const button = document.getElementById('signup-button');
+            button.disabled = true;
+            button.innerText = 'Processing...';
+
+            const name = document.getElementById('name').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+
+            // 1. Basic Validation
+            if (password !== confirmPassword) {
+                showMessage("Validation Error", "Passwords do not match. Please try again.");
+                button.disabled = false;
+                button.innerText = 'Create Account';
+                return;
+            }
+            
+            // 2. Retrieve existing users or initialize array
+            let users = [];
+            try {
+                const storedUsers = localStorage.getItem('appUsers');
+                if (storedUsers) {
+                    users = JSON.parse(storedUsers);
+                }
+            } catch (e) {
+                console.error("Error reading localStorage:", e);
+                // Continue with empty array if reading fails
+            }
+
+            // 3. Check for existing email
+            const emailExists = users.some(user => user.email === email);
+            if (emailExists) {
+                showMessage("Registration Failed", "An account with this email already exists.");
+                button.disabled = false;
+                button.innerText = 'Create Account';
+                return;
+            }
+
+            // 4. Create new user object
+            const newUser = {
+                name: name,
+                email: email,
+                password: password, 
+                registeredAt: new Date().toISOString()
+            };
+            
+            // 5. Add new user and save back to localStorage
+            users.push(newUser);
+            try {
+                localStorage.setItem('appUsers', JSON.stringify(users));
+                
+                // SUCCESS: Also set the current user session state
+                localStorage.setItem('currentUser', JSON.stringify({ email: newUser.email, name: newUser.name }));
+
+                // Redirect to the dashboard page located at /create/index.html
+                showMessage("Success!", `Account created successfully for ${name}. You will now be redirected to the dashboard.`, "/create/index.html");
+                document.getElementById('signup-form').reset(); // Clear form
+
+            } catch (e) {
+                console.error("Error writing to localStorage:", e);
+                showMessage("Storage Failed", "Could not save user data to local storage. Storage might be full.");
+            } finally {
+                button.disabled = false;
+                button.innerText = 'Create Account';
+            }
+        };
+    </script>
+</body>
+</html>
